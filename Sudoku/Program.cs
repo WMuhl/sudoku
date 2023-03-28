@@ -1,6 +1,7 @@
 ﻿using Sudoku;
 
-var grid = SudokuGenerator.Generate();
+var generator = new SudokuGenerator();
+var grid = generator.Generate();
 
 for (var i = 0; i < 9; i++)
 {
@@ -12,3 +13,7 @@ for (var i = 0; i < 9; i++)
 
     Console.WriteLine(output);
 }
+
+var solver = new SudokuSolver(grid);
+var numberOfSolutions = solver.Solve();
+Console.WriteLine($"{numberOfSolutions} solutions found:");

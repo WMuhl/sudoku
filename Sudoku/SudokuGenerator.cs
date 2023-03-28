@@ -1,32 +1,36 @@
 namespace Sudoku;
 
-public static class SudokuGenerator
+public class SudokuGenerator
 {
-    public static int[,] Generate()
+    private readonly int[,] _grid;
+
+    public SudokuGenerator()
     {
-        // Step 1: Create Grid
-        var grid = new int[9, 9];
-        
-        // Step 2: Fill in numbers
+        _grid = new int[9, 9];
+    }
+
+    public int[,] Generate()
+    {
+        // Step 1: Fill in numbers
         for (var row = 0; row < 9; row++)
         {
             for (var col = 0; col < 9; col++)
             {
-                grid[row, col] = (row * 3 + row / 3 + col) % 9 + 1;
+                _grid[row, col] = (row * 3 + row / 3 + col) % 9 + 1;
             }
         }
 
         // Step 3: Shuffle rows and columns
-        ShuffleRows(grid);
-        ShuffleColumns(grid);
+        ShuffleRows();
+        ShuffleColumns();
 
         // Step 4: Remove cells to create puzzle
-        RemoveCells(grid);
+        RemoveCells(40);
 
-        return grid;
+        return _grid;
     }
     
-    private static void ShuffleRows(int[,] grid)
+    private void ShuffleRows()
     {
         var random = new Random();
         for (var block = 0; block < 3; block++)
@@ -37,13 +41,13 @@ public static class SudokuGenerator
                 var row2 = random.Next(3) + block * 3;
                 for (var col = 0; col < 9; col++)
                 {
-                    (grid[row1, col], grid[row2, col]) = (grid[row2, col], grid[row1, col]);
+                    (_grid[row1, col], _grid[row2, col]) = (_grid[row2, col], _grid[row1, col]);
                 }
             }
         }
     }
 
-    private static void ShuffleColumns(int[,] grid)
+    private void ShuffleColumns()
     {
         var random = new Random();
         for (var block = 0; block < 3; block++)
@@ -54,22 +58,32 @@ public static class SudokuGenerator
                 var col2 = random.Next(3) + block * 3;
                 for (var row = 0; row < 9; row++)
                 {
-                    (grid[row, col1], grid[row, col2]) = (grid[row, col2], grid[row, col1]);
+                    (_grid[row, col1], _grid[row, col2]) = (_grid[row, col2], _grid[row, col1]);
                 }
             }
         }
     }
     
-    private static void RemoveCells(int[,] grid)
+    private void RemoveCells(int difficulty)
     {
         var random = new Random();
-        for (var i = 0; i < 40; i++)
+        for (var i = 0; i < difficulty; i++)
         {
             var row = random.Next(9);
             var col = random.Next(9);
-            if (grid[row, col] != 0)
+            var currentValue = _grid[row, col]; 
+            if (_grid[row, col] != 0)
             {
-                grid[row, col] = 0;
+                _grid[row, col] = 0;
+                var solver = new SudokuSolver(CopyGrid(_grid));
+                if (solver.Solve() == 1)
+                {
+                    Console.WriteLine($"{col},{row} is now {_grid[row,col]}");
+                    continue;
+                }
+                // Too many solutions try again
+                _grid[row, col] = currentValue;
+                i--;
             }
             else
             {
@@ -78,4 +92,17 @@ public static class SudokuGenerator
         }
     }
 
+    private static int[,] CopyGrid(int[,] grid)
+    {
+        var newGrid = new int[9,9];
+        for (var x = 0; x < 9; x++)
+        {
+            for (var y = 0; y < 9; y++)
+            {
+                newGrid[x, y] = grid[x, y];
+            }
+        }
+
+        return newGrid;
+    }
 }
